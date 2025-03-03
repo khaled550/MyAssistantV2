@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tripResultLauncher: ActivityResultLauncher<Intent>
 
+    private var isUpdating = false
     private var tripsAdded = "Trip added: "
     private lateinit var tripViewModel: TripViewModel
     private lateinit var binding: ActivityMainBinding
@@ -52,12 +53,34 @@ class MainActivity : AppCompatActivity() {
     )
 
     private var updateTrip:Trip? = null
+    var selectedTripId = -1
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.swapButton.setOnClickListener {
+            swapText()
+        }
+        binding.allTrips.setOnClickListener{
+            showAllTrips()
+        }
+        binding.save.text = "Save"
+        binding.save.setOnClickListener{
+            if (isUpdating){
+                saveTrip(isUpdating)
+            } else{
+
+                saveTrip(isUpdating)
+            }
+        }
+        binding.clear.setOnClickListener{
+            cleatFields()
+        }
+        binding.send.setOnClickListener{
+            sendToDriver()
+        }
 
         val tripDao = AppDatabase.getDatabase(application).tripDao()
         val repository = TripRepository(tripDao)
@@ -67,9 +90,12 @@ class MainActivity : AppCompatActivity() {
 
         tripResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                val selectedTripId = result.data?.getIntExtra("selected_trip_id", -1) ?: -1
+                selectedTripId = result.data?.getIntExtra("selected_trip_id", -1) ?: -1
                 if (selectedTripId != -1) {
+                    isUpdating = true
+                    binding.save.text = "Update"
                     lifecycleScope.launch {
+
                         tripViewModel.getTripById(selectedTripId) { trip ->
                             updateTrip = trip
                             binding.startPoint.text = Editable.Factory.getInstance().newEditable(updateTrip?.startPoint)
@@ -79,40 +105,18 @@ class MainActivity : AppCompatActivity() {
                             binding.notes.text = Editable.Factory.getInstance().newEditable(updateTrip?.notes)
                             val position = (binding.productLine.adapter as ArrayAdapter<String>).getPosition(updateTrip?.productLine.toString())
                             binding.productLine.setSelection(position)
-                            //position = (binding.date.adapter as ArrayAdapter<String>).getPosition(updateTrip?.productLine.toString())
                             Toast.makeText(this@MainActivity, "Selected Trip Driver: ${updateTrip?.driver}", Toast.LENGTH_SHORT).show()
-                            binding.save.text = "Update"
-                            binding.save.setOnClickListener{
-                                saveTrip(true)
-                            }
                         }
                     }
                 }
             }
         }
 
-        binding.swapButton.setOnClickListener {
-            swapText()
-        }
-        binding.allTrips.setOnClickListener{
-            showAllTrips()
-        }
-        binding.save.setOnClickListener{
-            binding.save.text = "Save"
-            saveTrip(false)
-        }
-        binding.clear.setOnClickListener{
-            cleatFields()
-        }
-        binding.send.setOnClickListener{
-            sendToDriver()
-        }
-
         initiateRequesters()
 
         //spinners
         initiateDriversList()
-        initiateDateList()
+        initiateDateList("")
         initiateplList()
 
         /*val database = AppDatabase.getDatabase(applicationContext)
@@ -154,14 +158,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun initiateDateList() {
+    private fun initiateDateList(updatingDate:String) {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
 
-        val dateList = listOf(
-            LocalDate.now().minusDays(1).format(formatter), // Yesterday
+        val dateList = mutableListOf(
             LocalDate.now().format(formatter), // Today
+            LocalDate.now().minusDays(1).format(formatter), // Yesterday
             LocalDate.now().plusDays(1).format(formatter)  // Tomorrow
         )
+        if (isUpdating)
+            dateList.add(updatingDate)
         val dateAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, dateList)
         dateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.date.adapter = dateAdapter
@@ -174,6 +180,7 @@ class MainActivity : AppCompatActivity() {
             "Rental",
             "WL",
             "Liner Hanger",
+            "Fishing",
             "TRS",
             "Thru Tubing",
             "Coil Tubing",
@@ -192,36 +199,50 @@ class MainActivity : AppCompatActivity() {
 
     private fun saveTrip(isUpdate:Boolean) {
         val requesterName = binding.requester.text.split(" ").first()
-        lifecycleScope.launch {
-            val newTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
-                Trip(
-                    date = binding.date.selectedItem.toString(),
-                    vehicleType = driverVehicleMap[binding.driver.selectedItem.toString()].toString(),
-                    productLine = binding.productLine.selectedItem.toString(),
-                    driver = binding.driver.selectedItem.toString(),
-                    startPoint = binding.startPoint.text.toString(),
-                    endPoint = binding.endPoint.text.toString(),
-                    cost = it,
-                    requester = requesterName,
-                    notes = binding.notes.text.toString()
-                )
-            }
-            if (newTrip != null) {
-                if (isUpdate){
-                    binding.textAdded.text = tripsAdded+newTrip.productLine
-                    sendToDriver()
-                    tripViewModel.insert(newTrip){
-                        runOnUiThread {
-                            Toast.makeText(this@MainActivity, "Trip inserted successfully", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } else{
-                    binding.textAdded.text = "Updated for "+newTrip.productLine
-                    sendToDriver()
-                    tripViewModel.update(newTrip){
+        val newTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
+            Trip(
+                date = binding.date.selectedItem.toString(),
+                vehicleType = driverVehicleMap[binding.driver.selectedItem.toString()].toString(),
+                productLine = binding.productLine.selectedItem.toString(),
+                driver = binding.driver.selectedItem.toString(),
+                startPoint = binding.startPoint.text.toString(),
+                endPoint = binding.endPoint.text.toString(),
+                cost = it,
+                requester = requesterName,
+                notes = binding.notes.text.toString()
+            )
+        }
+        if (newTrip != null) {
+            if (isUpdate){
+                binding.textAdded.text = "Updated for "+newTrip.productLine
+                sendToDriver()
+                updateTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
+                    Trip(
+                        id = selectedTripId,
+                        date = binding.date.selectedItem.toString(),
+                        vehicleType = driverVehicleMap[binding.driver.selectedItem.toString()].toString(),
+                        productLine = binding.productLine.selectedItem.toString(),
+                        driver = binding.driver.selectedItem.toString(),
+                        startPoint = binding.startPoint.text.toString(),
+                        endPoint = binding.endPoint.text.toString(),
+                        cost = it,
+                        requester = requesterName,
+                        notes = binding.notes.text.toString()
+                    )
+                }
+                updateTrip?.let {
+                    tripViewModel.update(it){
                         runOnUiThread {
                             Toast.makeText(this@MainActivity, "Trip updated successfully", Toast.LENGTH_SHORT).show()
                         }
+                    }
+                }
+            } else{
+                binding.textAdded.text = tripsAdded+newTrip.productLine
+                sendToDriver()
+                tripViewModel.insert(newTrip){
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Trip inserted successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
