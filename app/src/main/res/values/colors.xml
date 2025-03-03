@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Theme Colors -->
+    <color name="primaryColor">#6200EE</color> <!-- Deep Purple -->
+    <color name="primaryDarkColor">#3700B3</color> <!-- Darker Shade -->
+    <color name="accentColor">#03DAC5</color> <!-- Teal (Accent) -->
+
+    <!-- Button Colors -->
+    <color name="buttonColor">#6200EE</color>
+    <color name="buttonTextColor">#FFFFFF</color>
+
+    <!-- Status and Notification Bar -->
+    <color name="statusBarColor">#3700B3</color>
+    <color name="navigationBarColor">#FFFFFF</color>
+
+    <!-- Background and Card Colors -->
+    <color name="backgroundColor">#F5F5F5</color> <!-- Light Gray -->
+    <color name="cardBackgroundColor">#FFFFFF</color> <!-- Pure White -->
+
+    <!-- Text Colors -->
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray">#808080</color>
+    <color name="darkGray">#505050</color>
+    <color name="lightGray">#D3D3D3</color>
+
+    <!-- Custom Colors -->
+    <color name="red">#D32F2F</color> <!-- Error/Warning -->
+    <color name="green">#388E3C</color> <!-- Success -->
+    <color name="blue">#1976D2</color> <!-- Information -->
+</resources>
