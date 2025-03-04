@@ -3,15 +3,20 @@ package com.example.myassistantv2
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.widget.Toolbar
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -46,6 +51,19 @@ class DetailsActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
 
+        val driverAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.drivers_array,
+            android.R.layout.simple_spinner_dropdown_item
+        )
+        binding.spinnerDriver.adapter = driverAdapter
+        val plAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.pl_array,
+            android.R.layout.simple_spinner_dropdown_item
+        )
+        binding.spinnerPl.adapter = plAdapter
+
         val recyclerView = binding.recyclerView
 
         val adapter = TripAdapter(emptyList()) { selectedTrip ->
@@ -63,6 +81,24 @@ class DetailsActivity : AppCompatActivity() {
                 adapter.updateList(trips)
             }
         }
+        // Handle driver selection
+        binding.spinnerDriver.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedDriver = parent?.getItemAtPosition(position).toString()
+                adapter.setFilters(selectedDriver, binding.spinnerPl.selectedItem.toString())
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+        // Handle Product Line selection
+        binding.spinnerPl.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedPL = parent?.getItemAtPosition(position).toString()
+                adapter.setFilters(binding.spinnerPl.selectedItem.toString(), selectedPL)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -70,6 +106,7 @@ class DetailsActivity : AppCompatActivity() {
         return true
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_export -> {
@@ -100,6 +137,7 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchDriversWithNoTrips() {
         val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
         val date = LocalDate.now().format(formatter) // Today

@@ -67,12 +67,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.save.text = "Save"
         binding.save.setOnClickListener{
-            if (isUpdating){
-                saveTrip(isUpdating)
-            } else{
-
-                saveTrip(isUpdating)
-            }
+            saveTrip(isUpdating)
         }
         binding.clear.setOnClickListener{
             cleatFields()
@@ -263,6 +258,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun cleatFields() {
+        isUpdating = false
+        binding.save.text = "Save"
         binding.startPoint.text?.clear()
         binding.endPoint.text?.clear()
         binding.cost.text?.clear()

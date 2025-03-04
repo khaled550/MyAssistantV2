@@ -9,6 +9,10 @@ import androidx.recyclerview.widget.RecyclerView
 class TripAdapter(private var tripList: List<Trip>, private val onTripSelected: (Trip) -> Unit) :
     RecyclerView.Adapter<TripAdapter.TripViewHolder>() {
 
+    private var filteredTrips: List<Trip> = tripList
+    private var selectedDriver: String? = null
+    private var selectedPL: String? = null
+
     class TripViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvDate: TextView = view.findViewById(R.id.tv_trip_date)
         val tvVehicleType: TextView = view.findViewById(R.id.tv_vehicle_type)
@@ -38,7 +42,7 @@ class TripAdapter(private var tripList: List<Trip>, private val onTripSelected: 
         holder.tvNotes.text = "Notes: ${trip.notes}"
 
         holder.itemView.setOnClickListener {
-            onTripSelected(trip)  // Ensure the correct trip is passed
+            onTripSelected(trip)
         }
     }
 
@@ -48,4 +52,15 @@ class TripAdapter(private var tripList: List<Trip>, private val onTripSelected: 
         tripList = newList
         notifyDataSetChanged()
     }
+
+    fun setFilters(driver: String?, productLine: String?) {
+        selectedDriver = driver
+        selectedPL = productLine
+        filteredTrips = tripList.filter { trip ->
+            (selectedDriver == null || trip.driver == selectedDriver) ||
+                    (selectedPL == null || trip.productLine == selectedPL)
+        }
+        updateList(filteredTrips)
+    }
+
 }

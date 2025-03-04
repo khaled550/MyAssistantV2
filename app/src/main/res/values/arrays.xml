@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="drivers_array">
+        <item>All Drivers</item>
+        <item>Maninder</item>
+        <item>Mohamed Tariq</item>
+        <item>Anwar</item>
+        <item>Shaban</item>
+        <item>Saleem</item>
+        <item>Abdullah</item>
+        <item>Jan Alam</item>
+        <item>Gul Habib</item>
+        <item>Zangi</item>
+        <item>Saif Ur Rehman</item>
+        <item>Nam Dev</item>
+        <item>Durga</item>
+        <item>Maniraj</item>
+        <item>Ahmed Shah</item>
+        <item>Zakir</item>
+        <item>Nek Zali</item>
+        <item>Ghanayia</item>
+        <item>Prabhjith</item>
+        <item>Varinder</item>
+        <item>Rashid</item>
+        <item>Kuldip</item>
+    </string-array>
+
+    <string-array name="pl_array">
+        <item>All Product Lines</item>
+        <item>WCT</item>
+        <item>DS</item>
+        <item>Rental</item>
+        <item>WL</item>
+        <item>Liner Hanger</item>
+        <item>Fishing</item>
+        <item>TRS</item>
+        <item>Thru Tubing</item>
+        <item>Coil Tubing</item>
+        <item>ALS</item>
+        <item>PCE</item>
+        <item>JAR</item>
+        <item>M/S</item>
+        <item>SDS</item>
+    </string-array>
+</resources>
