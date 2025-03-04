@@ -42,6 +42,15 @@ interface TripDao {
 
     @Query("SELECT * FROM trips_data WHERE id = :tripId")
     suspend fun getTripById(tripId: Int): Trip?
+
+    @Query("""
+        SELECT DISTINCT driver 
+        FROM trips_data 
+        WHERE driver NOT IN (
+            SELECT DISTINCT driver FROM trips_data WHERE date = :selectedDate
+        )
+    """)
+    fun getDriversWithNoTrips(selectedDate: String): Flow<List<String>>
 }
 
 @Database(entities = [Trip::class], version = 1, exportSchema = false)
@@ -88,6 +97,10 @@ class TripRepository(private val tripDao: TripDao) {
     suspend fun getTripById(tripId: Int): Trip? {
         return tripDao.getTripById(tripId)
     }
+
+    fun getTripsByDate(date: String): Flow<List<String>> {
+        return tripDao.getDriversWithNoTrips(date)
+    }
 }
 
 class TripViewModel(private val repository: TripRepository) : ViewModel() {
@@ -110,6 +123,10 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
         repository.clearAll()
     }
 
+    fun getDriversWithNoTrips(date: String): Flow<List<String>> {
+        return repository.getTripsByDate(date)
+    }
+
     fun getTripById(tripId: Int, onResult: (Trip?) -> Unit) {
         viewModelScope.launch {
             val trip = repository.getTripById(tripId)
@@ -117,6 +134,7 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
         }
     }
 }
+
 class TripViewModelFactory(private val repository: TripRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(TripViewModel::class.java)) {
