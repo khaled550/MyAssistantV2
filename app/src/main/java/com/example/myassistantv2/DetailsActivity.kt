@@ -37,16 +37,6 @@ class DetailsActivity : AppCompatActivity() {
         binding = ActivityDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        /*tripResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val selectedTripId = result.data?.getIntExtra("selected_trip_id", -1) ?: -1
-                if (selectedTripId != -1) {
-                    Toast.makeText(this, "Selected Trip for Driver: $selectedTripId",
-                        Toast.LENGTH_SHORT).show()
-                }
-            }
-        }*/
-
         val recyclerView = binding.recyclerView
 
         val adapter = TripAdapter(emptyList()) { selectedTrip ->
