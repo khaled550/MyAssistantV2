@@ -69,6 +69,14 @@ class MainActivity : AppCompatActivity() {
         binding.save.setOnClickListener{
             saveTrip(isUpdating)
         }
+        binding.save.setOnLongClickListener {
+            saveTrip(false)
+            true
+        }
+        binding.clear.setOnLongClickListener {
+            updateTrip?.let { it1 -> deleteItem(it1) }
+            true
+        }
         binding.clear.setOnClickListener{
             cleatFields()
         }
@@ -199,11 +207,11 @@ class MainActivity : AppCompatActivity() {
                 vehicleType = driverVehicleMap[binding.driver.selectedItem.toString()].toString(),
                 productLine = binding.productLine.selectedItem.toString(),
                 driver = binding.driver.selectedItem.toString(),
-                startPoint = binding.startPoint.text.toString(),
-                endPoint = binding.endPoint.text.toString(),
+                startPoint = binding.startPoint.text.toString().trim(),
+                endPoint = binding.endPoint.text.toString().trim(),
                 cost = it,
-                requester = requesterName,
-                notes = binding.notes.text.toString()
+                requester = requesterName.trim(),
+                notes = binding.notes.text.toString().trim()
             )
         }
         if (newTrip != null) {
@@ -265,5 +273,10 @@ class MainActivity : AppCompatActivity() {
         binding.cost.text?.clear()
         binding.requester.text?.clear()
         binding.notes.text?.clear()
+    }
+
+    private fun deleteItem(deleteTrip:Trip){
+        tripViewModel.delete(deleteTrip)
+        Toast.makeText(this@MainActivity, "Deleted Trip for: ${updateTrip?.productLine}", Toast.LENGTH_SHORT).show()
     }
 }

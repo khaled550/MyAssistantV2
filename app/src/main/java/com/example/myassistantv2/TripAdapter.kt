@@ -31,7 +31,7 @@ class TripAdapter(private var tripList: List<Trip>, private val onTripSelected: 
     }
 
     override fun onBindViewHolder(holder: TripViewHolder, position: Int) {
-        val trip = tripList[position]
+        val trip = filteredTrips[position]
         holder.tvDate.text = "Date: ${trip.date}"
         holder.tvVehicleType.text = "Vehicle Type: ${trip.vehicleType}"
         holder.tvProductLine.text = "Product Line: ${trip.productLine}"
@@ -46,21 +46,32 @@ class TripAdapter(private var tripList: List<Trip>, private val onTripSelected: 
         }
     }
 
-    override fun getItemCount(): Int = tripList.size
+    override fun getItemCount(): Int = filteredTrips.size
 
-    fun updateList(newList: List<Trip>) {
-        tripList = newList
+    private fun updateList(newTrips: List<Trip>) {
+        filteredTrips = newTrips
         notifyDataSetChanged()
     }
 
     fun setFilters(driver: String?, productLine: String?) {
-        selectedDriver = driver
-        selectedPL = productLine
+        selectedDriver = if (driver == "All Drivers") null else driver
+        selectedPL = if (productLine == "All Product Lines") null else productLine
+
         filteredTrips = tripList.filter { trip ->
-            (selectedDriver == null || trip.driver == selectedDriver) ||
+            (selectedDriver == null || trip.driver == selectedDriver) &&
                     (selectedPL == null || trip.productLine == selectedPL)
         }
-        updateList(filteredTrips)
-    }
 
+        // Debugging logs
+        println("Filtering with -> Driver: $selectedDriver, Product Line: $selectedPL")
+        println("Filtered List Size: ${filteredTrips.size}")
+        println("Original List Size: ${tripList.size}")
+
+        updateList(filteredTrips)
+
+        if (driver == "All Drivers" && productLine == "All Product Lines") {
+            updateList(tripList) // Restore the full list
+            return
+        }
+    }
 }

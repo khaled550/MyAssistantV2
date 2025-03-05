@@ -4,14 +4,12 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/white"
         android:padding="16dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="16dp"
-            android:orientation="vertical"
-            android:background="@color/white">
+            android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -19,7 +17,6 @@
                 android:text="My Assistant"
                 android:textSize="22sp"
                 android:textStyle="bold"
-                android:textColor="@color/black"
                 android:layout_gravity="center"
                 android:paddingBottom="16dp"/>
 
@@ -95,16 +92,14 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="5sp"
-                    android:textColor="@color/black"
-                    android:background="@drawable/spinner_background"/>
+                    android:background="@android:color/transparent"/>
 
                 <Spinner
                     android:id="@+id/date"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/black"
-                    android:background="@drawable/spinner_background"/>
+                    android:background="@android:color/transparent"/>
             </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -177,7 +172,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="5sp"
                 android:prompt="@string/select_driver"
-                android:background="@drawable/spinner_background"/>
+                android:background="@android:color/transparent" />
 
             <!-- Buttons Section -->
             <LinearLayout

@@ -33,6 +33,7 @@ class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
     private lateinit var excelExporter: ExcelExporter
+    private lateinit var  adapter:TripAdapter
 
     private val tripViewModel: TripViewModel by viewModels {
         object : ViewModelProvider.Factory {
@@ -65,22 +66,20 @@ class DetailsActivity : AppCompatActivity() {
         binding.spinnerPl.adapter = plAdapter
 
         val recyclerView = binding.recyclerView
-
-        val adapter = TripAdapter(emptyList()) { selectedTrip ->
-            val resultIntent = Intent().apply {
-                putExtra("selected_trip_id", selectedTrip.id)
-            }
-            setResult(Activity.RESULT_OK, resultIntent)
-            finish()
-        }
         recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = adapter
-
         lifecycleScope.launch {
             tripViewModel.allData.collectLatest { trips ->
-                adapter.updateList(trips)
+                adapter = TripAdapter(trips){ selectedTrip ->
+                    val resultIntent = Intent().apply {
+                        putExtra("selected_trip_id", selectedTrip.id)
+                    }
+                    setResult(Activity.RESULT_OK, resultIntent)
+                    finish()
+                }
+                recyclerView.adapter = adapter
             }
         }
+
         // Handle driver selection
         binding.spinnerDriver.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -94,7 +93,7 @@ class DetailsActivity : AppCompatActivity() {
         binding.spinnerPl.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedPL = parent?.getItemAtPosition(position).toString()
-                adapter.setFilters(binding.spinnerPl.selectedItem.toString(), selectedPL)
+                adapter.setFilters(binding.spinnerDriver.selectedItem.toString(), selectedPL)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
