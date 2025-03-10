@@ -28,4 +28,7 @@
     <color name="red">#D32F2F</color> <!-- Error/Warning -->
     <color name="green">#388E3C</color> <!-- Success -->
     <color name="blue">#1976D2</color> <!-- Information -->
+
+    <color name="textColor">#000000</color>
+    <color name="hintTextColor">#505050</color>
 </resources>

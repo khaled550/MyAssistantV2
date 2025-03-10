@@ -15,6 +15,8 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.myassistantv2.databinding.ActivityMainBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -28,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tripViewModel: TripViewModel
     private lateinit var binding: ActivityMainBinding
     private val driverVehicleMap = mapOf(
+        "Select Driver" to "None",
         "Maninder" to "40ft Trailer",
         "Mohamed Tariq" to "Double Cabin",
         "Anwar" to "Double Cabin",
@@ -79,6 +82,8 @@ class MainActivity : AppCompatActivity() {
         }
         binding.clear.setOnClickListener{
             cleatFields()
+            /*saveTripToDatabase("from Abu-Dhabi to AD-111 BB\n" +
+                    "Abdelrahman +971 54 221 3545")*/
         }
         binding.send.setOnClickListener{
             sendToDriver()
@@ -105,8 +110,16 @@ class MainActivity : AppCompatActivity() {
                             binding.cost.text = Editable.Factory.getInstance().newEditable(updateTrip?.cost.toString())
                             binding.requester.text = Editable.Factory.getInstance().newEditable(updateTrip?.requester)
                             binding.notes.text = Editable.Factory.getInstance().newEditable(updateTrip?.notes)
-                            val position = (binding.productLine.adapter as ArrayAdapter<String>).getPosition(updateTrip?.productLine.toString())
-                            binding.productLine.setSelection(position)
+
+                            val plPosition = (binding.productLine.adapter as ArrayAdapter<String>).getPosition(updateTrip?.productLine.toString())
+                            binding.productLine.setSelection(plPosition)
+
+                            val driverPosition = (binding.driver.adapter as ArrayAdapter<String>).getPosition(updateTrip?.driver.toString())
+                            binding.driver.setSelection(driverPosition)
+
+                            val datePosition = (binding.date.adapter as ArrayAdapter<String>).getPosition(updateTrip?.date.toString())
+                            binding.date.setSelection(datePosition)
+
                             Toast.makeText(this@MainActivity, "Selected Trip Driver: ${updateTrip?.driver}", Toast.LENGTH_SHORT).show()
                         }
                     }
@@ -142,7 +155,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendToDriver() {
-        val shareMessage = "From '${binding.startPoint.text}' to '${binding.endPoint.text}', ${binding.requester.text}"
+        val shareMessage = "From ${binding.startPoint.text} to ${binding.endPoint.text} \n${binding.requester.text}"
         val intent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, shareMessage)
@@ -177,6 +190,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initiateplList() {
         val plList:List<String> = listOf(
+            "Select PL",
             "WCT",
             "DS",
             "Rental",
@@ -217,7 +231,6 @@ class MainActivity : AppCompatActivity() {
         if (newTrip != null) {
             if (isUpdate){
                 binding.textAdded.text = "Updated for "+newTrip.productLine
-                sendToDriver()
                 updateTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
                     Trip(
                         id = selectedTripId,
@@ -273,10 +286,47 @@ class MainActivity : AppCompatActivity() {
         binding.cost.text?.clear()
         binding.requester.text?.clear()
         binding.notes.text?.clear()
+        binding.productLine.setSelection(0)
+        binding.date.setSelection(0)
+        binding.driver.setSelection(0)
     }
 
     private fun deleteItem(deleteTrip:Trip){
         tripViewModel.delete(deleteTrip)
         Toast.makeText(this@MainActivity, "Deleted Trip for: ${updateTrip?.productLine}", Toast.LENGTH_SHORT).show()
     }
+
+    fun extractTripDetails(text: String): Trip? {
+        val regex = """Date:\s*(\d{4}-\d{2}-\d{2})\s*Vehicle:\s*(\w+)\s*PL:\s*(\w+)\s*Driver:\s*([\w\s]+)\s*From:\s*([\w\s]+)\s*To:\s*([\w\s]+)\s*Cost:\s*(\d+(\.\d+)?)\s*Requester:\s*([\w\s]+)\s*Notes:\s*(.*)""".toRegex()
+
+        val matchResult = regex.find(text)
+        return matchResult?.let {
+            val (date, vehicleType, productLine, driver, startPoint, endPoint, cost, _, requester, notes) = it.destructured
+            Trip(
+                date = date,
+                vehicleType = vehicleType,
+                productLine = productLine,
+                driver = driver,
+                startPoint = startPoint,
+                endPoint = endPoint,
+                cost = cost.toDouble(),
+                requester = requester,
+                notes = notes
+            )
+        }
+    }
+
+    fun saveTripToDatabase(text: String) {
+        val trip = extractTripDetails(text)
+        if (trip != null) {
+            Toast.makeText(this@MainActivity, "extractTripDetails: ${trip.startPoint}", Toast.LENGTH_SHORT).show()
+        }
+
+        if (trip != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                //tripDao.insert(trip)
+            }
+        }
+    }
+
 }

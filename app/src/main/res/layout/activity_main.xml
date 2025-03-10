@@ -7,7 +7,7 @@
         android:padding="16dp">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:padding="16dp"
             android:orientation="vertical">
 
@@ -17,6 +17,7 @@
                 android:text="My Assistant"
                 android:textSize="22sp"
                 android:textStyle="bold"
+                android:textColor="@color/textColor"
                 android:layout_gravity="center"
                 android:paddingBottom="16dp"/>
 
@@ -32,15 +33,16 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="@color/black"
-                    android:textColorHint="@color/gray">
+                    android:textColor="@color/textColor"
+                    android:textColorHint="@color/hintTextColor">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/start_point"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textSize="16sp"
-                        android:textColor="@color/black"
+                        android:textColor="@color/textColor"
+                        android:textColorHint="@color/hintTextColor"
                         android:singleLine="true"
                         android:maxLines="1"
                         android:ellipsize="end"
@@ -50,8 +52,8 @@
 
                 <ImageButton
                     android:id="@+id/swap_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:src="@drawable/swap_icon"
                     android:contentDescription="Swap"
                     android:background="?attr/selectableItemBackgroundBorderless"
@@ -63,8 +65,8 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    app:boxStrokeColor="@color/black"
-                    android:textColorHint="@color/gray">
+                    android:textColor="@color/textColor"
+                    android:textColorHint="@color/hintTextColor">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/end_point"
@@ -75,7 +77,8 @@
                         android:ellipsize="end"
                         android:inputType="text"
                         android:textSize="16sp"
-                        android:textColor="@color/black"
+                        android:textColor="@color/textColor"
+                        android:textColorHint="@color/hintTextColor"
                         android:hint="End Point"/>
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
@@ -90,7 +93,7 @@
                     android:id="@+id/product_line"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_marginEnd="5sp"
                     android:background="@android:color/transparent"/>
 
@@ -98,7 +101,7 @@
                     android:id="@+id/date"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:background="@android:color/transparent"/>
             </LinearLayout>
 
@@ -106,8 +109,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                app:boxStrokeColor="@color/black"
-                android:textColorHint="@color/gray"
+                android:textColor="@color/textColor"
+                android:textColorHint="@color/hintTextColor"
                 android:layout_marginBottom="12dp">
 
                 <AutoCompleteTextView
@@ -116,12 +119,12 @@
                     android:layout_height="50sp"
                     android:padding="5sp"
                     android:textSize="16sp"
-                    android:textColor="@color/black"
                     android:singleLine="true"
                     android:maxLines="1"
                     android:ellipsize="end"
                     android:inputType="text"
-                    android:textColorHint="?android:textColorPrimary"
+                    android:textColor="@color/textColor"
+                    android:textColorHint="@color/hintTextColor"
                     android:hint="Requester"/>
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -129,8 +132,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                app:boxStrokeColor="@color/black"
-                android:textColorHint="@color/gray"
+                android:textColor="@color/textColor"
+                android:textColorHint="@color/hintTextColor"
                 android:layout_marginBottom="12dp">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -138,9 +141,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="16sp"
-                    android:textColor="@color/black"
+                    android:textColor="@color/textColor"
+                    android:textColorHint="@color/hintTextColor"
                     android:inputType="numberDecimal"
-                    android:textColorHint="?android:textColorPrimary"
                     android:hint="Cost"/>
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -148,8 +151,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                app:boxStrokeColor="@color/black"
-                android:textColorHint="@color/gray"
+                android:textColor="@color/textColor"
+                android:textColorHint="@color/hintTextColor"
                 android:layout_marginBottom="12dp">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -161,15 +164,15 @@
                     android:ellipsize="end"
                     android:inputType="text"
                     android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:textColorHint="?android:textColorPrimary"
+                    android:textColor="@color/textColor"
+                    android:textColorHint="@color/hintTextColor"
                     android:hint="Notes"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <Spinner
                 android:id="@+id/driver"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_marginEnd="5sp"
                 android:prompt="@string/select_driver"
                 android:background="@android:color/transparent" />
@@ -189,8 +192,7 @@
                     android:layout_height="wrap_content"
                     android:text="..."
                     app:cornerRadius="8dp"
-                    app:backgroundTint="@color/primaryColor"
-                    android:textColor="@android:color/white"/>
+                    app:backgroundTint="@color/primaryColor"/>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/clear"
@@ -221,8 +223,7 @@
                 android:layout_height="wrap_content"
                 android:text="All Trips"
                 app:cornerRadius="8dp"
-                app:backgroundTint="@color/black"
-                android:textColor="@android:color/white"/>
+                app:backgroundTint="@color/primaryColor" />
 
             <TextView
                 android:id="@+id/textAdded"
@@ -231,7 +232,7 @@
                 android:text="Go ahead"
                 android:textSize="48sp"
                 android:textStyle="bold"
-                android:textColor="@color/black"
+                android:textColor="@color/textColor"
                 android:layout_gravity="center"
                 android:paddingBottom="16dp"/>
         </LinearLayout>
