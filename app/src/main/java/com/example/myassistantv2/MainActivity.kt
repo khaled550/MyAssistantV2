@@ -281,7 +281,7 @@ class MainActivity : AppCompatActivity() {
                 updateTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
                     Trip(
                         id = selectedTripId,
-                        date = binding.date.toString(),
+                        date = binding.date.editText?.text.toString(),
                         vehicleType = selectedDriver.vehicleType,
                         productLine = binding.productLine.selectedItem.toString(),
                         driver = selectedDriver.name,
