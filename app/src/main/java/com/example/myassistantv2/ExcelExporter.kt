@@ -46,7 +46,7 @@ class ExcelExporter(private val context: Context) {
                 row.createCell(5).setCellValue(trip.endPoint)
                 row.createCell(6).setCellValue(trip.cost)
                 row.createCell(7).setCellValue(trip.requester)
-                row.createCell(7).setCellValue(trip.notes)
+                row.createCell(8).setCellValue(trip.notes)
             }
 
             // Write to File

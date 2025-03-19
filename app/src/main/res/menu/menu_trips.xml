@@ -12,4 +12,16 @@
         android:title="Drivers No Trip"
         android:textColor="@color/textColor"
         app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/action_drivers_yesterday"
+        android:title="Yesterday Trip"
+        android:textColor="@color/textColor"
+        app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/edit_driver"
+        android:title="Edit drivers"
+        android:textColor="@color/textColor"
+        app:showAsAction="collapseActionView"/>
 </menu>

@@ -78,6 +78,26 @@ class DetailsActivity : AppCompatActivity() {
                 }
                 recyclerView.adapter = adapter
             }
+            /*// Handle driver selection
+            binding.spinnerDriver.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    val selectedDriver = parent?.getItemAtPosition(position).toString()
+                    adapter.setFilters(selectedDriver, binding.spinnerPl.selectedItem.toString())
+                    Toast.makeText(this@DetailsActivity, "Filtering data...", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+            // Handle Product Line selection
+            binding.spinnerPl.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                    val selectedPL = parent?.getItemAtPosition(position).toString()
+                    adapter.setFilters(binding.spinnerDriver.selectedItem.toString(), selectedPL)
+                    Toast.makeText(this@DetailsActivity, "Filtering data...", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }*/
         }
 
         // Handle driver selection
@@ -98,6 +118,7 @@ class DetailsActivity : AppCompatActivity() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -115,8 +136,18 @@ class DetailsActivity : AppCompatActivity() {
                 true
             }
             R.id.action_drivers -> {
-                fetchDriversWithNoTrips()
+                fetchDriversWithNoTrips(true)
                 Toast.makeText(this, "Refreshing data...", Toast.LENGTH_SHORT).show()
+                true
+            }
+            R.id.action_drivers_yesterday -> {
+                fetchDriversWithNoTrips(false)
+                Toast.makeText(this, "Refreshing data...", Toast.LENGTH_SHORT).show()
+                true
+            }
+            R.id.edit_driver -> {
+                val intent = Intent(this, EditDriverActivity::class.java)
+                startActivity(intent)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -137,9 +168,9 @@ class DetailsActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun fetchDriversWithNoTrips() {
-        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-        val date = LocalDate.now().format(formatter) // Today
+    private fun fetchDriversWithNoTrips(istoday:Boolean) {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val date = if (istoday) LocalDate.now().format(formatter) else LocalDate.now().minusDays(1).format(formatter)
         lifecycleScope.launch {
             tripViewModel.getDriversWithNoTrips(date).collectLatest { drivers ->
                 val message = if (drivers.isNotEmpty()) {
@@ -147,7 +178,6 @@ class DetailsActivity : AppCompatActivity() {
                 } else {
                     "All drivers had trips on this date."
                 }
-
                 showDriversDialog(message)
             }
         }

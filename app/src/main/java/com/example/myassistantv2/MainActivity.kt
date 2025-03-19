@@ -2,12 +2,15 @@ package com.example.myassistantv2
 
 import android.R
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,26 +20,36 @@ import androidx.lifecycle.lifecycleScope
 import com.example.myassistantv2.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var tripResultLauncher: ActivityResultLauncher<Intent>
 
+    private lateinit var driverDao: DriverDao
+    private lateinit var allDrivers: Flow<List<Driver>>
+    private lateinit var selectedDriver: Driver
+
     private var isUpdating = false
     private var tripsAdded = "Trip added: "
     private lateinit var tripViewModel: TripViewModel
     private lateinit var binding: ActivityMainBinding
-    private val driverVehicleMap = mapOf(
+    /*private val driverVehicleMap = mapOf(
         "Select Driver" to "None",
         "Maninder" to "40ft Trailer",
         "Mohamed Tariq" to "Double Cabin",
         "Anwar" to "Double Cabin",
         "Shaban" to "Double Cabin",
         "Saleem" to "Double Cabin",
-        "Abdullah" to "Double Cabin",
+        "Sanjay" to "Double Cabin",
         "Jan Alam" to "Double Cabin",
         "Gul Habib" to "50ft 6x6 Trailer",
         "Zangi" to "6x6 Trailer",
@@ -45,14 +58,14 @@ class MainActivity : AppCompatActivity() {
         "Durga" to "6x6 Trailer",
         "Maniraj" to "6x6 Trailer",
         "Ahmed Shah" to "6x6 Trailer",
-        "Zakir" to "6x6 Trailer",
+        "Sahib" to "6x6 Trailer",
         "Nek Zali" to "6x6 Trailer",
         "Ghanayia" to "6x6 Trailer",
         "Prabhjith" to "6x6 Trailer",
         "Varinder" to "50ft Trailer",
         "Rashid" to "Hiab",
         "Kuldip" to "7 Ton Pickup",
-    )
+    )*/
 
     private var updateTrip:Trip? = null
     var selectedTripId = -1
@@ -88,6 +101,15 @@ class MainActivity : AppCompatActivity() {
         binding.send.setOnClickListener{
             sendToDriver()
         }
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        var todayDate = Editable.Factory.getInstance().newEditable(LocalDate.now().format(formatter))
+        binding.date.editText?.text = todayDate
+        binding.calBtn.setOnClickListener {
+            showDatePicker(binding.calBtn)
+        }
+
+        driverDao = AppDatabase.getDatabase(application).driverDao()
+        allDrivers = driverDao.getAllDrivers()
 
         val tripDao = AppDatabase.getDatabase(application).tripDao()
         val repository = TripRepository(tripDao)
@@ -102,9 +124,9 @@ class MainActivity : AppCompatActivity() {
                     isUpdating = true
                     binding.save.text = "Update"
                     lifecycleScope.launch {
-
                         tripViewModel.getTripById(selectedTripId) { trip ->
                             updateTrip = trip
+                            binding.date.editText?.text = Editable.Factory.getInstance().newEditable(updateTrip?.date)
                             binding.startPoint.text = Editable.Factory.getInstance().newEditable(updateTrip?.startPoint)
                             binding.endPoint.text = Editable.Factory.getInstance().newEditable(updateTrip?.endPoint)
                             binding.cost.text = Editable.Factory.getInstance().newEditable(updateTrip?.cost.toString())
@@ -117,8 +139,8 @@ class MainActivity : AppCompatActivity() {
                             val driverPosition = (binding.driver.adapter as ArrayAdapter<String>).getPosition(updateTrip?.driver.toString())
                             binding.driver.setSelection(driverPosition)
 
-                            val datePosition = (binding.date.adapter as ArrayAdapter<String>).getPosition(updateTrip?.date.toString())
-                            binding.date.setSelection(datePosition)
+                            /*val datePosition = (binding.date.adapter as ArrayAdapter<String>).getPosition(updateTrip?.date.toString())
+                            binding.date.setSelection(datePosition)*/
 
                             Toast.makeText(this@MainActivity, "Selected Trip Driver: ${updateTrip?.driver}", Toast.LENGTH_SHORT).show()
                         }
@@ -131,7 +153,7 @@ class MainActivity : AppCompatActivity() {
 
         //spinners
         initiateDriversList()
-        initiateDateList("")
+        //initiateDateList("")
         initiateplList()
 
         /*val database = AppDatabase.getDatabase(applicationContext)
@@ -149,6 +171,7 @@ class MainActivity : AppCompatActivity() {
             "Sarry 0581076513",
             "Hassan 0543049411",
             "Henry 0553377193",
+            "Brian 0521043115",
             "Zahid 588954890")
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, requesters)
         binding.requester.setAdapter(adapter)
@@ -167,14 +190,37 @@ class MainActivity : AppCompatActivity() {
     /*---------*/
 
     private fun initiateDriversList() {
-        val driversAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, driverVehicleMap.entries.toList().map { it.key })
-        driversAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.driver.adapter = driversAdapter
+        val driverDao = AppDatabase.getDatabase(application).driverDao()
+        val allDrivers: Flow<List<Driver>> = driverDao.getAllDrivers()
+        lifecycleScope.launch {
+            allDrivers.collectLatest { drivers ->
+                val driverNames = drivers.map { it.name }
+                val adapter = ArrayAdapter(this@MainActivity, R.layout.simple_spinner_item, driverNames)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                binding.driver.adapter = adapter
+            }
+        }
+        binding.driver.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                //selectedDriver = driverDao.getDriverByName()
+                lifecycleScope.launch {
+                    driverDao.getDriverByName(parent.getItemAtPosition(position).toString())
+                        .collect { driver ->
+                            if (driver != null) {
+                                selectedDriver = driver
+                            }
+                        }
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+            }
+        }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    /*@RequiresApi(Build.VERSION_CODES.O)
     private fun initiateDateList(updatingDate:String) {
-        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
         val dateList = mutableListOf(
             LocalDate.now().format(formatter), // Today
@@ -185,8 +231,8 @@ class MainActivity : AppCompatActivity() {
             dateList.add(updatingDate)
         val dateAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, dateList)
         dateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.date.adapter = dateAdapter
-    }
+        //binding.date.adapter = dateAdapter
+    }*/
 
     private fun initiateplList() {
         val plList:List<String> = listOf(
@@ -214,13 +260,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveTrip(isUpdate:Boolean) {
+
         val requesterName = binding.requester.text.split(" ").first()
         val newTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
             Trip(
-                date = binding.date.selectedItem.toString(),
-                vehicleType = driverVehicleMap[binding.driver.selectedItem.toString()].toString(),
+                date = binding.date.toString(),
+                vehicleType = selectedDriver.vehicleType,
                 productLine = binding.productLine.selectedItem.toString(),
-                driver = binding.driver.selectedItem.toString(),
+                driver = selectedDriver.name,
                 startPoint = binding.startPoint.text.toString().trim(),
                 endPoint = binding.endPoint.text.toString().trim(),
                 cost = it,
@@ -234,10 +281,10 @@ class MainActivity : AppCompatActivity() {
                 updateTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
                     Trip(
                         id = selectedTripId,
-                        date = binding.date.selectedItem.toString(),
-                        vehicleType = driverVehicleMap[binding.driver.selectedItem.toString()].toString(),
+                        date = binding.date.toString(),
+                        vehicleType = selectedDriver.vehicleType,
                         productLine = binding.productLine.selectedItem.toString(),
-                        driver = binding.driver.selectedItem.toString(),
+                        driver = selectedDriver.name,
                         startPoint = binding.startPoint.text.toString(),
                         endPoint = binding.endPoint.text.toString(),
                         cost = it,
@@ -247,9 +294,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 updateTrip?.let {
                     tripViewModel.update(it){
-                        runOnUiThread {
-                            Toast.makeText(this@MainActivity, "Trip updated successfully", Toast.LENGTH_SHORT).show()
-                        }
+                        Toast.makeText(this@MainActivity, "Trip updated successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             } else{
@@ -287,7 +332,7 @@ class MainActivity : AppCompatActivity() {
         binding.requester.text?.clear()
         binding.notes.text?.clear()
         binding.productLine.setSelection(0)
-        binding.date.setSelection(0)
+        binding.date.editText?.text?.clear()
         binding.driver.setSelection(0)
     }
 
@@ -316,17 +361,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun saveTripToDatabase(text: String) {
-        val trip = extractTripDetails(text)
-        if (trip != null) {
-            Toast.makeText(this@MainActivity, "extractTripDetails: ${trip.startPoint}", Toast.LENGTH_SHORT).show()
-        }
-
-        if (trip != null) {
-            CoroutineScope(Dispatchers.IO).launch {
-                //tripDao.insert(trip)
-            }
-        }
+    private fun showDatePicker(editText: EditText) {
+        val calendar = Calendar.getInstance()
+        val datePicker = DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                val selectedDate = Calendar.getInstance()
+                selectedDate.set(year, month, dayOfMonth)
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                editText.setText(dateFormat.format(selectedDate.time))
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePicker.show()
     }
-
 }

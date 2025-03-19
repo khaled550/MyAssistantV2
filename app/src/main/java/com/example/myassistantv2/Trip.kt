@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Entity(tableName = "trips_data")
@@ -53,9 +56,10 @@ interface TripDao {
     fun getDriversWithNoTrips(selectedDate: String): Flow<List<String>>
 }
 
-@Database(entities = [Trip::class], version = 1, exportSchema = false)
+@Database(entities = [Trip::class, Driver::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun tripDao(): TripDao
+    abstract fun driverDao(): DriverDao
 
     companion object {
         @Volatile
@@ -67,10 +71,52 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "trip_database"
-                ).build()
+                ).addCallback(DatabaseCallback())
+                    .build()
                 INSTANCE = instance
                 instance
             }
+        }
+    }
+
+    private class DatabaseCallback : Callback() {
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            INSTANCE?.let { database ->
+                CoroutineScope(Dispatchers.IO).launch {
+                    populateDatabase(database.driverDao())
+                }
+            }
+        }
+
+        suspend fun populateDatabase(driverDao: DriverDao) {
+            val driversMap = mapOf(
+                "Select Driver" to "None",
+                "Maninder" to "40ft Trailer",
+                "Mohamed Tariq" to "Double Cabin",
+                "Anwar" to "Double Cabin",
+                "Shaban" to "Double Cabin",
+                "Saleem" to "Double Cabin",
+                "Sanjay" to "Double Cabin",
+                "Jan Alam" to "Double Cabin",
+                "Gul Habib" to "50ft 6x6 Trailer",
+                "Zangi" to "6x6 Trailer",
+                "Saif Ur Rehman" to "6x6 Trailer",
+                "Nam Dev" to "6x6 Trailer",
+                "Durga" to "6x6 Trailer",
+                "Maniraj" to "6x6 Trailer",
+                "Ahmed Shah" to "6x6 Trailer",
+                "Sahib" to "6x6 Trailer",
+                "Nek Zali" to "6x6 Trailer",
+                "Ghanayia" to "6x6 Trailer",
+                "Prabhjith" to "6x6 Trailer",
+                "Varinder" to "50ft Trailer",
+                "Rashid" to "Hiab",
+                "Kuldip" to "7 Ton Pickup"
+            )
+
+            val driversList = driversMap.map { (name, type) -> Driver(name = name, vehicleType = type) }
+            driverDao.insertAll(driversList)
         }
     }
 }
