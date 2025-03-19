@@ -42,30 +42,6 @@ class MainActivity : AppCompatActivity() {
     private var tripsAdded = "Trip added: "
     private lateinit var tripViewModel: TripViewModel
     private lateinit var binding: ActivityMainBinding
-    /*private val driverVehicleMap = mapOf(
-        "Select Driver" to "None",
-        "Maninder" to "40ft Trailer",
-        "Mohamed Tariq" to "Double Cabin",
-        "Anwar" to "Double Cabin",
-        "Shaban" to "Double Cabin",
-        "Saleem" to "Double Cabin",
-        "Sanjay" to "Double Cabin",
-        "Jan Alam" to "Double Cabin",
-        "Gul Habib" to "50ft 6x6 Trailer",
-        "Zangi" to "6x6 Trailer",
-        "Saif Ur Rehman" to "6x6 Trailer",
-        "Nam Dev" to "6x6 Trailer",
-        "Durga" to "6x6 Trailer",
-        "Maniraj" to "6x6 Trailer",
-        "Ahmed Shah" to "6x6 Trailer",
-        "Sahib" to "6x6 Trailer",
-        "Nek Zali" to "6x6 Trailer",
-        "Ghanayia" to "6x6 Trailer",
-        "Prabhjith" to "6x6 Trailer",
-        "Varinder" to "50ft Trailer",
-        "Rashid" to "Hiab",
-        "Kuldip" to "7 Ton Pickup",
-    )*/
 
     private var updateTrip:Trip? = null
     var selectedTripId = -1
@@ -95,8 +71,6 @@ class MainActivity : AppCompatActivity() {
         }
         binding.clear.setOnClickListener{
             cleatFields()
-            /*saveTripToDatabase("from Abu-Dhabi to AD-111 BB\n" +
-                    "Abdelrahman +971 54 221 3545")*/
         }
         binding.send.setOnClickListener{
             sendToDriver()
@@ -281,7 +255,7 @@ class MainActivity : AppCompatActivity() {
                 updateTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
                     Trip(
                         id = selectedTripId,
-                        date = binding.date.editText?.text.toString(),
+                        date = binding.date.toString(),
                         vehicleType = selectedDriver.vehicleType,
                         productLine = binding.productLine.selectedItem.toString(),
                         driver = selectedDriver.name,
