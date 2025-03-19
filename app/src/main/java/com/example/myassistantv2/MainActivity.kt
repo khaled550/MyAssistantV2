@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
         val allDrivers: Flow<List<Driver>> = driverDao.getAllDrivers()
         lifecycleScope.launch {
             allDrivers.collectLatest { drivers ->
-                val driverNames = drivers.map { it.name }
+                val driverNames = listOf("Select Driver") + drivers.map { it.name }
                 val adapter = ArrayAdapter(this@MainActivity, R.layout.simple_spinner_item, driverNames)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 binding.driver.adapter = adapter

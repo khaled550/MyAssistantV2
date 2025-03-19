@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myassistantv2.databinding.ActivityDetailsBinding
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -34,6 +35,9 @@ class DetailsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailsBinding
     private lateinit var excelExporter: ExcelExporter
     private lateinit var  adapter:TripAdapter
+
+    private lateinit var driverDao: DriverDao
+    private lateinit var allDrivers: Flow<List<Driver>>
 
     private val tripViewModel: TripViewModel by viewModels {
         object : ViewModelProvider.Factory {
@@ -52,12 +56,23 @@ class DetailsActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
 
+        driverDao = AppDatabase.getDatabase(application).driverDao()
+        allDrivers = driverDao.getAllDrivers()
+
         val driverAdapter = ArrayAdapter.createFromResource(
             this,
             R.array.drivers_array,
             android.R.layout.simple_spinner_dropdown_item
         )
-        binding.spinnerDriver.adapter = driverAdapter
+        lifecycleScope.launch {
+            allDrivers.collectLatest { drivers ->
+                val driverNames = listOf("All Drivers") + drivers.map { it.name }
+                val adapter = ArrayAdapter(this@DetailsActivity, android.R.layout.simple_spinner_item, driverNames)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                binding.spinnerDriver.adapter = adapter
+            }
+        }
+
         val plAdapter = ArrayAdapter.createFromResource(
             this,
             R.array.pl_array,
