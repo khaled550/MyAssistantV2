@@ -1,6 +1,7 @@
 package com.example.myassistantv2
 
 import android.content.Context
+import android.text.Editable
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
@@ -11,6 +12,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Entity(tableName = "trips_data")
 data class Trip(
@@ -47,9 +50,9 @@ interface TripDao {
     suspend fun getTripById(tripId: Int): Trip?
 
     @Query("""
-        SELECT DISTINCT driver 
-        FROM trips_data 
-        WHERE driver NOT IN (
+        SELECT DISTINCT name 
+        FROM drivers 
+        WHERE name NOT IN (
             SELECT DISTINCT driver FROM trips_data WHERE date = :selectedDate
         )
     """)
@@ -151,6 +154,9 @@ class TripRepository(private val tripDao: TripDao) {
 
 class TripViewModel(private val repository: TripRepository) : ViewModel() {
     val allData = repository.allData
+
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    var todayDate = Editable.Factory.getInstance().newEditable(LocalDate.now().format(formatter))
 
     fun insert(trip: Trip, onSuccess: () -> Unit) = viewModelScope.launch {
         repository.insert(trip)

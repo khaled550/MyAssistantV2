@@ -75,9 +75,8 @@ class MainActivity : AppCompatActivity() {
         binding.send.setOnClickListener{
             sendToDriver()
         }
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        var todayDate = Editable.Factory.getInstance().newEditable(LocalDate.now().format(formatter))
-        binding.date.editText?.text = todayDate
+
+        binding.date.editText?.text = tripViewModel.todayDate
         binding.calBtn.setOnClickListener {
             showDatePicker(binding.calBtn)
         }
@@ -306,7 +305,7 @@ class MainActivity : AppCompatActivity() {
         binding.requester.text?.clear()
         binding.notes.text?.clear()
         binding.productLine.setSelection(0)
-        binding.date.editText?.text?.clear()
+        binding.date.editText?.text = tripViewModel.todayDate
         binding.driver.setSelection(0)
     }
 
