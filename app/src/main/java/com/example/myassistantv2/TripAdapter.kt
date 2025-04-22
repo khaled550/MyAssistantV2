@@ -13,6 +13,12 @@ class TripAdapter(private var tripList: List<Trip>, private val onTripSelected: 
     private var selectedDriver: String? = null
     private var selectedPL: String? = null
 
+    fun setData(trips: List<Trip>) {
+        tripList = trips
+        filteredTrips = trips
+        notifyDataSetChanged()
+    }
+
     class TripViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvDate: TextView = view.findViewById(R.id.tv_trip_date)
         val tvVehicleType: TextView = view.findViewById(R.id.tv_vehicle_type)

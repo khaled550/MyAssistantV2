@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -26,7 +28,7 @@ data class Trip(
     val endPoint: String,
     val cost: Double,
     val requester: String,
-    val notes: String
+    val notes: String,
 )
 
 @Dao
@@ -48,6 +50,9 @@ interface TripDao {
 
     @Query("SELECT * FROM trips_data WHERE id = :tripId")
     suspend fun getTripById(tripId: Int): Trip?
+
+    @Query("SELECT DISTINCT requester FROM trips_data")
+    fun getAllContactDetails(): Flow<List<String>>
 
     @Query("""
         SELECT DISTINCT name 
@@ -150,12 +155,16 @@ class TripRepository(private val tripDao: TripDao) {
     fun getTripsByDate(date: String): Flow<List<String>> {
         return tripDao.getDriversWithNoTrips(date)
     }
+
+    suspend fun getContactDetails(): Flow<List<String>> {
+        return tripDao.getAllContactDetails()
+    }
 }
 
 class TripViewModel(private val repository: TripRepository) : ViewModel() {
     val allData = repository.allData
 
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     var todayDate = Editable.Factory.getInstance().newEditable(LocalDate.now().format(formatter))
 
     fun insert(trip: Trip, onSuccess: () -> Unit) = viewModelScope.launch {
@@ -185,7 +194,11 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
             onResult(trip)
         }
     }
-}
+
+    fun getContactDetails(): Flow<List<String>> = flow {
+        val contactDetails = repository.getContactDetails().firstOrNull() ?: emptyList()
+        emit(contactDetails)
+    }
 
 class TripViewModelFactory(private val repository: TripRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -195,4 +208,4 @@ class TripViewModelFactory(private val repository: TripRepository) : ViewModelPr
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
-}
+}}

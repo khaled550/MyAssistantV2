@@ -6,11 +6,11 @@
 
     <!-- First arrow -->
     <path
-        android:fillColor="@color/primaryColor"
+        android:fillColor="?attr/colorPrimary"
         android:pathData="M4,9h10l-3.5,-3.5l1.42,-1.42L17.84,10l-5.92,5.92l-1.42,-1.42L14,11H4V9Z" />
 
     <!-- Second arrow -->
     <path
-        android:fillColor="@color/primaryColor"
+        android:fillColor="?attr/colorPrimary"
         android:pathData="M20,15h-10l3.5,3.5l-1.42,1.42L6.16,14l5.92,-5.92l1.42,1.42L10,13h10V15Z" />
 </vector>

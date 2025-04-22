@@ -18,15 +18,10 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.myassistantv2.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
@@ -51,6 +46,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val tripDao = AppDatabase.getDatabase(application).tripDao()
+        val repository = TripRepository(tripDao)
+
+        val factory = TripViewModel.TripViewModelFactory(repository)
+        tripViewModel = ViewModelProvider(this, factory)[TripViewModel::class.java]
+
         binding.swapButton.setOnClickListener {
             swapText()
         }
@@ -84,12 +86,6 @@ class MainActivity : AppCompatActivity() {
         driverDao = AppDatabase.getDatabase(application).driverDao()
         allDrivers = driverDao.getAllDrivers()
 
-        val tripDao = AppDatabase.getDatabase(application).tripDao()
-        val repository = TripRepository(tripDao)
-
-        val factory = TripViewModelFactory(repository)
-        tripViewModel = ViewModelProvider(this, factory)[TripViewModel::class.java]
-
         tripResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 selectedTripId = result.data?.getIntExtra("selected_trip_id", -1) ?: -1
@@ -115,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                             /*val datePosition = (binding.date.adapter as ArrayAdapter<String>).getPosition(updateTrip?.date.toString())
                             binding.date.setSelection(datePosition)*/
 
-                            Toast.makeText(this@MainActivity, "Selected Trip Driver: ${updateTrip?.driver}", Toast.LENGTH_SHORT).show()
+                            //Toast.makeText(this@MainActivity, "Selected Trip Driver: ${updateTrip?.driver}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -123,20 +119,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         initiateRequesters()
-
-        //spinners
         initiateDriversList()
-        //initiateDateList("")
         initiateplList()
 
-        /*val database = AppDatabase.getDatabase(applicationContext)
-        val repository = TripRepository(database.tripDao())
-        val factory = TripViewModelFactory(repository)
-        tripViewModel = ViewModelProvider(this, factory)[TripViewModel::class.java]*/
     }
 
     private fun initiateRequesters() {
-        val requesters = listOf(
+        /*val requesters = listOf(
             "Anil 0524468168",
             "Nizar 0564117280 ",
             "Ashique 0567804305",
@@ -147,7 +136,20 @@ class MainActivity : AppCompatActivity() {
             "Brian 0521043115",
             "Zahid 588954890")
         val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, requesters)
-        binding.requester.setAdapter(adapter)
+        binding.requester.setAdapter(adapter)*/
+        lifecycleScope.launch {
+            tripViewModel.getContactDetails().collectLatest { contactDetails ->
+                val filteredList = contactDetails
+                    .filter { it.split(" ").size >= 2 }  // Keep only strings with ≥2 words
+                    .map { it.split(" ").take(2).joinToString(" ") }
+                val adapter = ArrayAdapter(
+                    this@MainActivity,
+                    android.R.layout.simple_list_item_1,
+                    filteredList
+                )
+                binding.requester.setAdapter(adapter)
+            }
+        }
     }
 
     private fun sendToDriver() {
@@ -191,22 +193,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /*@RequiresApi(Build.VERSION_CODES.O)
-    private fun initiateDateList(updatingDate:String) {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-        val dateList = mutableListOf(
-            LocalDate.now().format(formatter), // Today
-            LocalDate.now().minusDays(1).format(formatter), // Yesterday
-            LocalDate.now().plusDays(1).format(formatter)  // Tomorrow
-        )
-        if (isUpdating)
-            dateList.add(updatingDate)
-        val dateAdapter = ArrayAdapter(this, R.layout.simple_spinner_item, dateList)
-        dateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        //binding.date.adapter = dateAdapter
-    }*/
-
     private fun initiateplList() {
         val plList:List<String> = listOf(
             "Select PL",
@@ -233,41 +219,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveTrip(isUpdate:Boolean) {
-
-        val requesterName = binding.requester.text.split(" ").first()
         val newTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
             Trip(
-                date = binding.date.toString(),
+                date = binding.calBtn.text.toString(),
                 vehicleType = selectedDriver.vehicleType,
                 productLine = binding.productLine.selectedItem.toString(),
                 driver = selectedDriver.name,
                 startPoint = binding.startPoint.text.toString().trim(),
                 endPoint = binding.endPoint.text.toString().trim(),
                 cost = it,
-                requester = requesterName.trim(),
-                notes = binding.notes.text.toString().trim()
+                requester = binding.requester.text.toString().trim(),
+                notes = binding.notes.text.toString().trim(),
             )
         }
         if (newTrip != null) {
             if (isUpdate){
                 binding.textAdded.text = "Updated for "+newTrip.productLine
+                Toast.makeText(this@MainActivity, "Updated for "+newTrip.productLine, Toast.LENGTH_SHORT).show()
                 updateTrip = binding.cost.text.toString().toDoubleOrNull()?.let {
                     Trip(
                         id = selectedTripId,
-                        date = binding.date.toString(),
+                        date = binding.calBtn.text.toString(),
                         vehicleType = selectedDriver.vehicleType,
                         productLine = binding.productLine.selectedItem.toString(),
                         driver = selectedDriver.name,
                         startPoint = binding.startPoint.text.toString(),
                         endPoint = binding.endPoint.text.toString(),
                         cost = it,
-                        requester = requesterName,
-                        notes = binding.notes.text.toString()
+                        requester = binding.requester.text.toString(),
+                        notes = binding.notes.text.toString(),
                     )
                 }
                 updateTrip?.let {
                     tripViewModel.update(it){
-                        Toast.makeText(this@MainActivity, "Trip updated successfully", Toast.LENGTH_SHORT).show()
                     }
                 }
             } else{
@@ -314,7 +298,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this@MainActivity, "Deleted Trip for: ${updateTrip?.productLine}", Toast.LENGTH_SHORT).show()
     }
 
-    fun extractTripDetails(text: String): Trip? {
+    /*fun extractTripDetails(text: String): Trip? {
         val regex = """Date:\s*(\d{4}-\d{2}-\d{2})\s*Vehicle:\s*(\w+)\s*PL:\s*(\w+)\s*Driver:\s*([\w\s]+)\s*From:\s*([\w\s]+)\s*To:\s*([\w\s]+)\s*Cost:\s*(\d+(\.\d+)?)\s*Requester:\s*([\w\s]+)\s*Notes:\s*(.*)""".toRegex()
 
         val matchResult = regex.find(text)
@@ -329,10 +313,10 @@ class MainActivity : AppCompatActivity() {
                 endPoint = endPoint,
                 cost = cost.toDouble(),
                 requester = requester,
-                notes = notes
+                notes = notes,
             )
         }
-    }
+    }*/
 
     private fun showDatePicker(editText: EditText) {
         val calendar = Calendar.getInstance()

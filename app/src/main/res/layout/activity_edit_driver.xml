@@ -32,10 +32,16 @@
             android:hint="Vehicle Type" />
 
         <Button
-            android:id="@+id/btn_save_driver"
+            android:id="@+id/btn_update_driver"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save Driver"/>
+            android:text="Update Driver"/>
+
+        <Button
+            android:id="@+id/btn_add_driver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Driver"/>
 
     </LinearLayout>
 </layout>

@@ -58,8 +58,7 @@
                     android:src="@drawable/swap_icon"
                     android:contentDescription="Swap"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:layout_marginHorizontal="8dp"
-                    app:tint="@color/black" />
+                    android:layout_marginHorizontal="8dp" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"
@@ -117,6 +116,14 @@
 
             </LinearLayout>
 
+            <Spinner
+                android:id="@+id/driver"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginEnd="5sp"
+                android:prompt="@string/select_driver"
+                android:background="@android:color/transparent" />
+
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -129,7 +136,7 @@
                     android:id="@+id/requester"
                     android:layout_width="match_parent"
                     android:layout_height="50sp"
-                    android:padding="5sp"
+                    android:padding="15sp"
                     android:textSize="16sp"
                     android:singleLine="true"
                     android:maxLines="1"
@@ -180,14 +187,6 @@
                     android:textColorHint="@color/hintTextColor"
                     android:hint="Notes"/>
             </com.google.android.material.textfield.TextInputLayout>
-
-            <Spinner
-                android:id="@+id/driver"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginEnd="5sp"
-                android:prompt="@string/select_driver"
-                android:background="@android:color/transparent" />
 
             <!-- Buttons Section -->
             <LinearLayout

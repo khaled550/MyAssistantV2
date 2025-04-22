@@ -3,7 +3,6 @@
     <!-- Primary Theme Colors -->
     <color name="primaryColor">#6200EE</color> <!-- Deep Purple -->
     <color name="primaryDarkColor">#3700B3</color> <!-- Darker Shade -->
-    <color name="accentColor">#03DAC5</color> <!-- Teal (Accent) -->
 
     <!-- Button Colors -->
     <color name="buttonColor">#6200EE</color>
@@ -31,4 +30,24 @@
 
     <color name="textColor">#000000</color>
     <color name="hintTextColor">#505050</color>
+
+    <!-- Card Colors -->
+    <color name="cardBackground">#FFFFFF</color>
+    <color name="cardBackgroundSecondary">#F5F5F5</color>
+
+    <!-- Text Colors -->
+    <color name="primaryText">#212121</color>
+    <color name="secondaryText">#757575</color>
+
+    <!-- Accent Colors -->
+    <color name="accentColor">#2196F3</color>
+    <color name="accentColorLight">#BBDEFB</color>
+
+    <!-- Status Colors -->
+    <color name="costColor">#4CAF50</color>
+    <color name="warningColor">#FF9800</color>
+
+    <!-- Note Colors -->
+    <color name="noteText">#616161</color>
+    <color name="noteBackground">#F5F5F5</color>
 </resources>

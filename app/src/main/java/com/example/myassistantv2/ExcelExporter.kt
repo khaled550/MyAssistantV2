@@ -38,6 +38,7 @@ class ExcelExporter(private val context: Context) {
             // Fill Data Rows
             trips.forEachIndexed { index, trip ->
                 val row = sheet.createRow(index + 1)
+                val requesterName = trip.requester.split(" ").first()
                 row.createCell(0).setCellValue(trip.date)
                 row.createCell(1).setCellValue(trip.vehicleType)
                 row.createCell(2).setCellValue(trip.productLine)
@@ -45,7 +46,7 @@ class ExcelExporter(private val context: Context) {
                 row.createCell(4).setCellValue(trip.startPoint)
                 row.createCell(5).setCellValue(trip.endPoint)
                 row.createCell(6).setCellValue(trip.cost)
-                row.createCell(7).setCellValue(trip.requester)
+                row.createCell(7).setCellValue(requesterName)
                 row.createCell(8).setCellValue(trip.notes)
             }
 

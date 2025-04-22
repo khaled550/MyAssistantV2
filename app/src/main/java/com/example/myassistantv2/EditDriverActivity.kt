@@ -57,15 +57,7 @@ class EditDriverActivity : AppCompatActivity() {
             }
         }
 
-        /*binding.btnSaveDriver.setOnClickListener {
-            val newName = binding.editDriverName.text.toString()
-            val newVehicleType = binding.editVehicleType.text.toString()
-            driverViewModel.selectedDriver.value?.name = binding.editDriverName.text.toString()
-            driverViewModel.selectedDriver.value?.vehicleType = binding.editVehicleType.text.toString()
-            driverViewModel.updateDriver(driverViewModel.selectedDriver.value)
-        }*/
-
-        binding.btnSaveDriver.setOnClickListener {
+        binding.btnUpdateDriver.setOnClickListener {
             val name = binding.editDriverName.text.toString().trim()
             val vehicle = binding.editVehicleType.text.toString().trim()
             if (name.isNotEmpty() && vehicle.isNotEmpty()) {
@@ -75,7 +67,19 @@ class EditDriverActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please enter valid details", Toast.LENGTH_SHORT).show()
             }
-            Toast.makeText(this, "Updated driver...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Driver Added", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.btnAddDriver.setOnClickListener {
+            val name = binding.editDriverName.text.toString().trim()
+            val vehicle = binding.editVehicleType.text.toString().trim()
+            if (name.isNotEmpty() && vehicle.isNotEmpty()) {
+                driverViewModel.addDriver(name, vehicle)
+                Toast.makeText(this, "Updated driver...", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Please enter valid details", Toast.LENGTH_SHORT).show()
+            }
+
         }
     }
 }

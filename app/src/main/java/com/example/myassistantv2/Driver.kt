@@ -99,10 +99,10 @@ class DriverViewModel(private val repository: DriverRepository) : ViewModel() {
         _selectedDriver.value = driver
     }
 
-    fun addDriver() {
-        val name = _driverName.value.trim()
-        val vehicle = _vehicleType.value.trim()
-
+    fun addDriver(
+        name: String,
+        vehicle: String
+    ) {
         if (name.isNotEmpty() && vehicle.isNotEmpty()) {
             viewModelScope.launch {
                 repository.addDriver(Driver(name = name, vehicleType = vehicle))

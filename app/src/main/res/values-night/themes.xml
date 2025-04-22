@@ -4,4 +4,9 @@
         <!-- Customize your dark theme here. -->
          <item name="colorPrimary">@color/primaryColor</item>
     </style>
+
+    <style name="CustomPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+
 </resources>

@@ -3,7 +3,6 @@ package com.example.myassistantv2
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -12,11 +11,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import android.widget.Toolbar
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -26,15 +21,15 @@ import com.example.myassistantv2.databinding.ActivityDetailsBinding
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.math.log
 
 class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
     private lateinit var excelExporter: ExcelExporter
-    private lateinit var  adapter:TripAdapter
+    private lateinit var  tripAdapter:TripAdapter
 
     private lateinit var driverDao: DriverDao
     private lateinit var allDrivers: Flow<List<Driver>>
@@ -58,12 +53,19 @@ class DetailsActivity : AppCompatActivity() {
 
         driverDao = AppDatabase.getDatabase(application).driverDao()
         allDrivers = driverDao.getAllDrivers()
+        tripAdapter = TripAdapter(emptyList()){ selectedTrip ->
+            val resultIntent = Intent().apply {
+                putExtra("selected_trip_id", selectedTrip.id)
+            }
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish()
+        }
 
-        val driverAdapter = ArrayAdapter.createFromResource(
+        /*val driverAdapter = ArrayAdapter.createFromResource(
             this,
             R.array.drivers_array,
             android.R.layout.simple_spinner_dropdown_item
-        )
+        )*/
         lifecycleScope.launch {
             allDrivers.collectLatest { drivers ->
                 val driverNames = listOf("All Drivers") + drivers.map { it.name }
@@ -84,42 +86,20 @@ class DetailsActivity : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         lifecycleScope.launch {
             tripViewModel.allData.collectLatest { trips ->
-                adapter = TripAdapter(trips){ selectedTrip ->
-                    val resultIntent = Intent().apply {
-                        putExtra("selected_trip_id", selectedTrip.id)
-                    }
-                    setResult(Activity.RESULT_OK, resultIntent)
-                    finish()
+                val sortedList = trips.sortedByDescending { item ->
+                    val dateString = item.date.substringAfter("on ").trim() // Extract "2023-10-15"
+                    SimpleDateFormat("yyyy-MM-dd").parse(dateString)
                 }
-                recyclerView.adapter = adapter
+                tripAdapter.setData(sortedList)
+                recyclerView.adapter = tripAdapter
             }
-            /*// Handle driver selection
-            binding.spinnerDriver.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    val selectedDriver = parent?.getItemAtPosition(position).toString()
-                    adapter.setFilters(selectedDriver, binding.spinnerPl.selectedItem.toString())
-                    Toast.makeText(this@DetailsActivity, "Filtering data...", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>?) {}
-            }
-            // Handle Product Line selection
-            binding.spinnerPl.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                    val selectedPL = parent?.getItemAtPosition(position).toString()
-                    adapter.setFilters(binding.spinnerDriver.selectedItem.toString(), selectedPL)
-                    Toast.makeText(this@DetailsActivity, "Filtering data...", Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>?) {}
-            }*/
         }
 
         // Handle driver selection
         binding.spinnerDriver.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedDriver = parent?.getItemAtPosition(position).toString()
-                adapter.setFilters(selectedDriver, binding.spinnerPl.selectedItem.toString())
+                tripAdapter.setFilters(selectedDriver, binding.spinnerPl.selectedItem.toString())
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -128,7 +108,7 @@ class DetailsActivity : AppCompatActivity() {
         binding.spinnerPl.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedPL = parent?.getItemAtPosition(position).toString()
-                adapter.setFilters(binding.spinnerDriver.selectedItem.toString(), selectedPL)
+                tripAdapter.setFilters(binding.spinnerDriver.selectedItem.toString(), selectedPL)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -141,23 +121,19 @@ class DetailsActivity : AppCompatActivity() {
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_export -> {
                 excelExporter = ExcelExporter(this)
-                exportDataToExcel()
-                Toast.makeText(this, "Exporting...", Toast.LENGTH_SHORT).show()
+                exportToExcelConfirmationDialog()
                 true
             }
             R.id.action_drivers -> {
                 fetchDriversWithNoTrips(true)
-                Toast.makeText(this, "Refreshing data...", Toast.LENGTH_SHORT).show()
                 true
             }
             R.id.action_drivers_yesterday -> {
                 fetchDriversWithNoTrips(false)
-                Toast.makeText(this, "Refreshing data...", Toast.LENGTH_SHORT).show()
                 true
             }
             R.id.edit_driver -> {
@@ -172,7 +148,6 @@ class DetailsActivity : AppCompatActivity() {
     private fun exportDataToExcel() {
         lifecycleScope.launch {
             val filePath = excelExporter.exportTripsToExcel(tripViewModel.allData)
-
             if (filePath != null) {
                 Log.i("ExcelExport", "Exported to: $filePath", )
                 Toast.makeText(this@DetailsActivity, "Exported to: $filePath", Toast.LENGTH_LONG).show()
@@ -182,7 +157,17 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    private fun exportToExcelConfirmationDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Export to Excel file")
+            .setMessage("Are you sure?")
+            .setPositiveButton("Export") { _, _ ->
+                exportDataToExcel()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun fetchDriversWithNoTrips(istoday:Boolean) {
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         val date = if (istoday) LocalDate.now().format(formatter) else LocalDate.now().minusDays(1).format(formatter)

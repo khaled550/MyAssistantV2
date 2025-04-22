@@ -3,7 +3,19 @@
     <style name="Base.Theme.MyAssistantV2" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="actionMenuTextColor">#000000</item>
     </style>
 
-    <style name="Theme.MyAssistantV2" parent="Base.Theme.MyAssistantV2" />
+    <style name="Theme.MyAssistantV2" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="android:actionMenuTextColor">#000000</item>
+        <item name="popupMenuStyle">@style/CustomPopupMenuStyle</item>
+    </style>
+
+    <style name="CustomPopupMenuStyle" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">#FFFFFF</item>
+        <item name="android:textColor">#000000</item>
+    </style>
+
 </resources>
