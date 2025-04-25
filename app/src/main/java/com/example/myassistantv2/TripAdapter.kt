@@ -40,7 +40,7 @@ class TripAdapter(private var tripList: List<Trip>, private val onTripSelected: 
         val trip = filteredTrips[position]
         holder.tvDate.text = "Date: ${trip.date}"
         holder.tvVehicleType.text = "Vehicle Type: ${trip.vehicleType}"
-        holder.tvProductLine.text = "Product Line: ${trip.productLine}"
+        holder.tvProductLine.text = "PL: ${trip.productLine}"
         holder.tvDriver.text = "Driver: ${trip.driver}"
         holder.tvStartEnd.text = "Start: ${trip.startPoint} → End: ${trip.endPoint}"
         holder.tvCost.text = "Cost: $${trip.cost}"

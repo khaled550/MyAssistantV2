@@ -4,7 +4,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="2dp">
+        android:background="@color/background">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -206,15 +206,16 @@
                     app:backgroundTint="@color/primaryColor"/>
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/clear"
+                    android:id="@+id/clearBtn"
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
                     android:text="Clear"
                     app:cornerRadius="8dp"
                     app:backgroundTint="@color/red"
-                    android:textColor="@android:color/white"
-                    android:layout_marginHorizontal="8dp"/>
+                    android:textColor="@android:color/white" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/send"
@@ -229,12 +230,14 @@
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/allTrips"
+                android:id="@+id/alltripsBtn"
                 android:layout_width="match_parent"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="All Trips"
+                android:text="Trips"
                 app:cornerRadius="8dp"
-                app:backgroundTint="@color/primaryColor" />
+                app:backgroundTint="@color/primaryColor"
+                android:textColor="@android:color/white"/>
 
             <TextView
                 android:id="@+id/textAdded"

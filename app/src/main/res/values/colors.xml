@@ -31,6 +31,8 @@
     <color name="textColor">#000000</color>
     <color name="hintTextColor">#505050</color>
 
+    <color name="background">#FFFFFF</color>
+
     <!-- Card Colors -->
     <color name="cardBackground">#FFFFFF</color>
     <color name="cardBackgroundSecondary">#F5F5F5</color>

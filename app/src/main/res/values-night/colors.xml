@@ -30,6 +30,8 @@
 
     <color name="textColor">#D3D3D3</color>
     <color name="hintTextColor">#D3D3D3</color>
+    
+    <color name="background">#000000</color>
 
     <!-- Card Colors -->
     <color name="cardBackground">#1E1E1E</color>

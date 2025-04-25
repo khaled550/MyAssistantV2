@@ -20,4 +20,9 @@
         android:id="@+id/edit_driver"
         android:title="Edit drivers"
         app:showAsAction="collapseActionView"/>
+
+    <item
+        android:id="@+id/action_show_cost"
+        android:title="Show Cost"
+        app:showAsAction="collapseActionView"/>
 </menu>

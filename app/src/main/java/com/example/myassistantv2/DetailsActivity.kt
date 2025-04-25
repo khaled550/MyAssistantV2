@@ -24,12 +24,14 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 class DetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDetailsBinding
     private lateinit var excelExporter: ExcelExporter
     private lateinit var  tripAdapter:TripAdapter
+    private lateinit var tripsList: List<Trip>
 
     private lateinit var driverDao: DriverDao
     private lateinit var allDrivers: Flow<List<Driver>>
@@ -61,11 +63,6 @@ class DetailsActivity : AppCompatActivity() {
             finish()
         }
 
-        /*val driverAdapter = ArrayAdapter.createFromResource(
-            this,
-            R.array.drivers_array,
-            android.R.layout.simple_spinner_dropdown_item
-        )*/
         lifecycleScope.launch {
             allDrivers.collectLatest { drivers ->
                 val driverNames = listOf("All Drivers") + drivers.map { it.name }
@@ -90,6 +87,7 @@ class DetailsActivity : AppCompatActivity() {
                     val dateString = item.date.substringAfter("on ").trim() // Extract "2023-10-15"
                     SimpleDateFormat("yyyy-MM-dd").parse(dateString)
                 }
+                tripsList = sortedList
                 tripAdapter.setData(sortedList)
                 recyclerView.adapter = tripAdapter
             }
@@ -141,6 +139,10 @@ class DetailsActivity : AppCompatActivity() {
                 startActivity(intent)
                 true
             }
+            R.id.action_show_cost -> {
+                showFilteredData(tripsList)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -183,11 +185,43 @@ class DetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showDriversDialog(message: String) {
+    private fun showDriversDialog(message: String, title: String = "Drivers Availability") {
         AlertDialog.Builder(this)
-            .setTitle("Drivers Availability")
+            .setTitle(title)
             .setMessage(message)
             .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
             .show()
+    }
+
+    // calculate total cost
+    private fun calculateTotalCost(trips: List<Trip>): Double {
+        return trips.sumOf { it.cost }
+    }
+
+    // filter trips cost by vehicle type
+    private fun filterTripsByVehicleType(trips: List<Trip>, vehicleType: String): List<Trip> {
+        return trips.filter { it.vehicleType == vehicleType }
+    }
+
+    // show filtered data
+    private fun showFilteredData(trips: List<Trip>) {
+        val currentMonth = Calendar.getInstance().get(Calendar.MONTH) + 1 // Months are 0-based
+        val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+        val currentMonthData = trips.filter { item ->
+            val dateStr = item.date.substringAfter("on ").trim()
+            val dateParts = dateStr.split("-")
+            val year = dateParts[0].toInt()
+            val month = dateParts[1].toInt()
+            year == currentYear && month == currentMonth
+        }
+        val trailersTrips = calculateTotalCost(filterTripsByVehicleType(currentMonthData, "6x6 Trailer"))
+        val DCsTrips = calculateTotalCost(filterTripsByVehicleType(currentMonthData, "Double Cabin"))
+        val hiabsTrips = calculateTotalCost(filterTripsByVehicleType(currentMonthData, "Hiab"))
+        val totalTripsCost = trailersTrips + DCsTrips + hiabsTrips
+        val message = "6x6 Trailer trips: $trailersTrips\n" +
+                "Double Cabin trips: $DCsTrips\n" +
+                "Hiab trips: $hiabsTrips\n" +
+                "Total trips cost: $totalTripsCost"
+        showDriversDialog(message, "Cost Details")
     }
 }

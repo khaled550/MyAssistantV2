@@ -3,20 +3,31 @@ package com.example.myassistantv2
 import android.R
 import android.app.Activity
 import android.app.DatePickerDialog
+import android.app.Dialog
+import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
+import android.view.View
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.myassistantv2.databinding.ActivityMainBinding
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
@@ -39,13 +50,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private var updateTrip:Trip? = null
-    var selectedTripId = -1
+    private var selectedTripId = -1
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        window.statusBarColor = Color.WHITE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        }
 
         val tripDao = AppDatabase.getDatabase(application).tripDao()
         val repository = TripRepository(tripDao)
@@ -56,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         binding.swapButton.setOnClickListener {
             swapText()
         }
-        binding.allTrips.setOnClickListener{
+        binding.alltripsBtn.setOnClickListener{
             showAllTrips()
         }
         binding.save.text = "Save"
@@ -67,20 +82,36 @@ class MainActivity : AppCompatActivity() {
             saveTrip(false)
             true
         }
-        binding.clear.setOnLongClickListener {
+        binding.clearBtn.setOnLongClickListener {
             updateTrip?.let { it1 -> deleteItem(it1) }
             true
         }
-        binding.clear.setOnClickListener{
+        binding.clearBtn.setOnClickListener{
             cleatFields()
         }
         binding.send.setOnClickListener{
             sendToDriver()
         }
+        /*binding.getDetailsBtn.setOnClickListener {
+            ExtractionDialog(this, this).show()
+        }*/
 
         binding.date.editText?.text = tripViewModel.todayDate
         binding.calBtn.setOnClickListener {
             showDatePicker(binding.calBtn)
+        }
+
+        binding.requester.doOnTextChanged { text, _, _, _ ->
+            lifecycleScope.launch {
+                tripViewModel.getProductLineByRequesterPartialMatch(text.toString()).collectLatest { productLines ->
+                    val filteredList = productLines
+                        .filter { it.isNotEmpty() }  // Keep only non-empty strings
+                    if (filteredList.isNotEmpty()){
+                        val plPosition = (binding.productLine.adapter as ArrayAdapter<String>).getPosition(filteredList[0])
+                        binding.productLine.setSelection(plPosition)
+                    }
+                }
+            }
         }
 
         driverDao = AppDatabase.getDatabase(application).driverDao()
@@ -98,7 +129,7 @@ class MainActivity : AppCompatActivity() {
                             binding.date.editText?.text = Editable.Factory.getInstance().newEditable(updateTrip?.date)
                             binding.startPoint.text = Editable.Factory.getInstance().newEditable(updateTrip?.startPoint)
                             binding.endPoint.text = Editable.Factory.getInstance().newEditable(updateTrip?.endPoint)
-                            binding.cost.text = Editable.Factory.getInstance().newEditable(updateTrip?.cost.toString())
+                            binding.cost.text = Editable.Factory.getInstance().newEditable("%.0f".format(updateTrip?.cost))
                             binding.requester.text = Editable.Factory.getInstance().newEditable(updateTrip?.requester)
                             binding.notes.text = Editable.Factory.getInstance().newEditable(updateTrip?.notes)
 
@@ -107,11 +138,6 @@ class MainActivity : AppCompatActivity() {
 
                             val driverPosition = (binding.driver.adapter as ArrayAdapter<String>).getPosition(updateTrip?.driver.toString())
                             binding.driver.setSelection(driverPosition)
-
-                            /*val datePosition = (binding.date.adapter as ArrayAdapter<String>).getPosition(updateTrip?.date.toString())
-                            binding.date.setSelection(datePosition)*/
-
-                            //Toast.makeText(this@MainActivity, "Selected Trip Driver: ${updateTrip?.driver}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -125,18 +151,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initiateRequesters() {
-        /*val requesters = listOf(
-            "Anil 0524468168",
-            "Nizar 0564117280 ",
-            "Ashique 0567804305",
-            "Umair 0503868306 ",
-            "Sarry 0581076513",
-            "Hassan 0543049411",
-            "Henry 0553377193",
-            "Brian 0521043115",
-            "Zahid 588954890")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, requesters)
-        binding.requester.setAdapter(adapter)*/
         lifecycleScope.launch {
             tripViewModel.getContactDetails().collectLatest { contactDetails ->
                 val filteredList = contactDetails
@@ -153,7 +167,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendToDriver() {
-        val shareMessage = "From ${binding.startPoint.text} to ${binding.endPoint.text} \n${binding.requester.text}"
+        val shareMessage = "From ${binding.startPoint.text.toString().trim()} to ${binding.endPoint.text} \n${binding.requester.text}"
         val intent = Intent().apply {
             action = Intent.ACTION_SEND
             putExtra(Intent.EXTRA_TEXT, shareMessage)
@@ -177,12 +191,50 @@ class MainActivity : AppCompatActivity() {
         }
         binding.driver.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
-                //selectedDriver = driverDao.getDriverByName()
                 lifecycleScope.launch {
                     driverDao.getDriverByName(parent.getItemAtPosition(position).toString())
                         .collect { driver ->
                             if (driver != null) {
                                 selectedDriver = driver
+                                if (!isUpdating){
+                                    binding.startPoint.setOnEditorActionListener { v, actionId, _ ->
+                                        if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT) {
+                                            // Handle Enter key press
+                                            lifecycleScope.launch {
+                                                tripViewModel.findSimilarTrips(
+                                                    search = v.text.toString(),
+                                                    vehicleType = selectedDriver.vehicleType
+                                                ).collectLatest { similarTrips ->
+                                                    if (similarTrips.isNotEmpty()) {
+                                                        showTripsDialog(similarTrips)
+                                                    } else {
+                                                        Toast.makeText(this@MainActivity, "No similar trips found", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
+                                            }
+                                            true  // Consume the event
+                                        } else {
+                                            false // Let system handle other actions
+                                        }
+                                    }
+                                    /*val startPoint = binding.startPoint.text.toString().trim()
+                                    val endPoint = binding.endPoint.text.toString().trim()
+                                    tripViewModel.getCostByDriver(
+                                        startPoint = startPoint,
+                                        endPoint = endPoint,
+                                        vehicleType = selectedDriver.vehicleType
+                                    ).collectLatest {
+                                        val costs = it
+                                        if (costs.isNotEmpty()) {
+                                            if (startPoint == endPoint){
+                                                binding.cost.text = Editable.Factory.getInstance().newEditable((costs.min()*1.5).toString())
+                                            } else
+                                                binding.cost.text = Editable.Factory.getInstance().newEditable(costs.min().toString())
+                                            println("TripCost: "+costs.min().toString())
+                                        }
+                                        println("TripCost: NA")
+                                    }*/
+                                }
                             }
                         }
                 }
@@ -298,26 +350,6 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this@MainActivity, "Deleted Trip for: ${updateTrip?.productLine}", Toast.LENGTH_SHORT).show()
     }
 
-    /*fun extractTripDetails(text: String): Trip? {
-        val regex = """Date:\s*(\d{4}-\d{2}-\d{2})\s*Vehicle:\s*(\w+)\s*PL:\s*(\w+)\s*Driver:\s*([\w\s]+)\s*From:\s*([\w\s]+)\s*To:\s*([\w\s]+)\s*Cost:\s*(\d+(\.\d+)?)\s*Requester:\s*([\w\s]+)\s*Notes:\s*(.*)""".toRegex()
-
-        val matchResult = regex.find(text)
-        return matchResult?.let {
-            val (date, vehicleType, productLine, driver, startPoint, endPoint, cost, _, requester, notes) = it.destructured
-            Trip(
-                date = date,
-                vehicleType = vehicleType,
-                productLine = productLine,
-                driver = driver,
-                startPoint = startPoint,
-                endPoint = endPoint,
-                cost = cost.toDouble(),
-                requester = requester,
-                notes = notes,
-            )
-        }
-    }*/
-
     private fun showDatePicker(editText: EditText) {
         val calendar = Calendar.getInstance()
         val datePicker = DatePickerDialog(
@@ -333,5 +365,24 @@ class MainActivity : AppCompatActivity() {
             calendar.get(Calendar.DAY_OF_MONTH)
         )
         datePicker.show()
+    }
+
+    private fun showTripsDialog(similarTripsList:List<Trip>) {
+        SimilarTripsDialog(
+            this,
+            similarTripsList,
+            onTripSelected = { selectedTrip ->
+                binding.apply {
+                    startPoint.text = Editable.Factory.getInstance().newEditable(selectedTrip.startPoint)
+                    endPoint.text = Editable.Factory.getInstance().newEditable(selectedTrip.endPoint)
+                    cost.text = Editable.Factory.getInstance().newEditable(selectedTrip.cost.toString())
+                    //requester.text = Editable.Factory.getInstance().newEditable(selectedTrip.requester)
+                    notes.text = Editable.Factory.getInstance().newEditable(selectedTrip.notes)
+                }
+            },
+            onDismiss = {
+                // Optional: Clear the search if needed
+            }
+        )
     }
 }

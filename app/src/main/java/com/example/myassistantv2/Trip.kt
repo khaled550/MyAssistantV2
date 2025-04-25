@@ -2,6 +2,8 @@ package com.example.myassistantv2
 
 import android.content.Context
 import android.text.Editable
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
@@ -54,6 +56,9 @@ interface TripDao {
     @Query("SELECT DISTINCT requester FROM trips_data")
     fun getAllContactDetails(): Flow<List<String>>
 
+    @Query("SELECT productLine FROM trips_data WHERE requester LIKE '%' || :requester || '%'")
+    fun getProductLineByRequesterPartialMatch(requester: String): Flow<List<String>>
+
     @Query("""
         SELECT DISTINCT name 
         FROM drivers 
@@ -62,6 +67,33 @@ interface TripDao {
         )
     """)
     fun getDriversWithNoTrips(selectedDate: String): Flow<List<String>>
+
+    //*****//
+
+    @Query("""
+        SELECT * FROM trips_data 
+        WHERE (
+        startPoint LIKE '%' || :search || '%' OR 
+        endPoint LIKE '%' || :search || '%' OR
+        startPoint LIKE '% ' || :search || ' %' OR
+        endPoint LIKE '% ' || :search || ' %' OR
+        startPoint LIKE :search || '%' OR
+        endPoint LIKE :search || '%' OR
+        startPoint LIKE '% ' || :search OR
+        endPoint LIKE '% ' || :search
+    )
+        AND vehicleType = :vehicleType
+        LIMIT 5
+    """)
+    fun findSimilarTrips(search: String, vehicleType: String): Flow<List<Trip>>
+
+    @Query("""
+        SELECT vehicleType 
+        FROM trips_data 
+        WHERE driver = :driverName
+    """)
+    fun getVehicleTypeDriverName(driverName: String): Flow<String?>
+
 }
 
 @Database(entities = [Trip::class, Driver::class], version = 1, exportSchema = false)
@@ -156,15 +188,33 @@ class TripRepository(private val tripDao: TripDao) {
         return tripDao.getDriversWithNoTrips(date)
     }
 
-    suspend fun getContactDetails(): Flow<List<String>> {
+    fun getContactDetails(): Flow<List<String>> {
         return tripDao.getAllContactDetails()
+    }
+
+    fun getProductLineByRequesterPartialMatch(requester: String): Flow<List<String>> {
+        return tripDao.getProductLineByRequesterPartialMatch(requester)
+    }
+
+    fun getDriverByName(driverName: String): Flow<String?> {
+        return tripDao.getVehicleTypeDriverName(driverName)
+    }
+
+    fun getCostByDriver(search: String, vehicleType: String): Flow<List<Trip>> {
+        return tripDao.findSimilarTrips(search, vehicleType)
+    }
+
+    fun findSimilarTrips(search: String, vehicleType: String): Flow<List<Trip>> {
+        return tripDao.findSimilarTrips(search, vehicleType)
     }
 }
 
 class TripViewModel(private val repository: TripRepository) : ViewModel() {
     val allData = repository.allData
 
-    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    //private val costCalculator = TripCostCalculator(repository.tripDao)
+
+    private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     var todayDate = Editable.Factory.getInstance().newEditable(LocalDate.now().format(formatter))
 
     fun insert(trip: Trip, onSuccess: () -> Unit) = viewModelScope.launch {
@@ -180,10 +230,6 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
         repository.delete(trip)
     }
 
-    fun clearAll() = viewModelScope.launch {
-        repository.clearAll()
-    }
-
     fun getDriversWithNoTrips(date: String): Flow<List<String>> {
         return repository.getTripsByDate(date)
     }
@@ -195,10 +241,28 @@ class TripViewModel(private val repository: TripRepository) : ViewModel() {
         }
     }
 
+    fun findSimilarTrips(search: String, vehicleType: String): Flow<List<Trip>> = flow {
+        val trips = repository.findSimilarTrips(search, vehicleType).firstOrNull() ?: emptyList()
+        emit(trips)
+    }
+
     fun getContactDetails(): Flow<List<String>> = flow {
         val contactDetails = repository.getContactDetails().firstOrNull() ?: emptyList()
         emit(contactDetails)
     }
+
+    fun getProductLineByRequesterPartialMatch(requester: String): Flow<List<String>> = flow {
+        val productLines = repository.getProductLineByRequesterPartialMatch(requester).firstOrNull() ?: emptyList()
+        emit(productLines)
+    }
+
+    fun getCostByDriver(startPoint: String,endPoint: String, vehicleType: String): Flow<List<Trip>> {
+        val search = if (startPoint.contains("-")) startPoint else endPoint
+        return repository.getCostByDriver(search, vehicleType)
+    }
+
+
+
 
 class TripViewModelFactory(private val repository: TripRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -208,4 +272,5 @@ class TripViewModelFactory(private val repository: TripRepository) : ViewModelPr
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
-}}
+}
+}
